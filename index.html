@@ -11,95 +11,96 @@
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable"></script>
     <style>
         /* Ustawienia dla całego tła */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: black;
-            background: url('https://github.com/car0tek/liczniki/blob/main/DJI_0636.JPG') no-repeat center center fixed;
-            background-size: cover;
-            position: relative;
-        }
+      body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: black;
+    background: url('https://github.com/car0tek/liczniki/blob/main/DJI_0636.JPG') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
 
-        /* Dodaj ciemny overlay z 50% przezroczystością */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* 50% przyciemnienie */
-            z-index: -1; /* Umieść za treścią */
-        }
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 50% przyciemnienie */
+    z-index: -1; /* Umieść za treścią */
+}
 
-      .container {
-            width: 80vw; /* Ustaw szerokość kontenera na 80% szerokości widoku */
-            max-width: 1920px; /* Maksymalna szerokość kontenera */
-            height: calc(80vw * 9 / 16); /* Ustaw wysokość kontenera proporcjonalnie do szerokości dla 16:9 */
-            margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.8); /* Tło pod tekstem o 80% przejrzystości */
-            padding: 20px;
-            box-sizing: border-box; /* Uwzględnia padding w szerokości kontenera */
-        }
-          
-        .form-group {
-            margin-bottom: 1em;
-        }
+.container {
+    width: 80vw; /* Ustaw szerokość kontenera na 80% szerokości widoku */
+    max-width: 1920px; /* Maksymalna szerokość kontenera */
+    height: calc(80vw * 9 / 16); /* Ustaw wysokość kontenera proporcjonalnie do szerokości dla 16:9 */
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.8); /* Tło pod tekstem o 80% przejrzystości */
+    padding: 20px;
+    box-sizing: border-box; /* Uwzględnia padding w szerokości kontenera */
+}
 
-        label {
-            display: block;
-            margin-bottom: 0.5em;
-        }
+.form-group {
+    margin-bottom: 1em;
+}
 
-        input, button {
-            width: 100%;
-            padding: 0.5em;
-            margin-bottom: 1em;
-        }
+label {
+    display: block;
+    margin-bottom: 0.5em;
+}
 
-        button {
-            padding: 0.5em 1em;
-        }
+input, button {
+    width: 100%;
+    padding: 0.5em;
+    margin-bottom: 1em;
+}
 
-        .buttons {
-            display: flex;
-            justify-content: space-between;
-        }
+button {
+    padding: 0.5em 1em;
+}
 
-        canvas {
-            width: 100%;
-            max-width: 1000px;
-        }
+.buttons {
+    display: flex;
+    justify-content: space-between;
+}
 
-        .tables-container {
-            display: flex;
-            justify-content: space-between;
-        }
+canvas {
+    width: 100%;
+    max-width: 100%;
+}
 
-        .table-wrapper {
-            width: 48%;
-        }
+.tables-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 1%;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+.table-wrapper {
+    width: 48%;
+    overflow-x: auto; /* Dodaj przewijanie poziome dla większych tabel */
+}
 
-        table, th, td {
-            border: 1px solid #ddd;
-        }
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-        th, td {
-            padding: 6px;
-            text-align: left;
-            font-size: 11px;
-            white-space: nowrap;
-        }
+table, th, td {
+    border: 1px solid #ddd;
+}
 
-        th {
-            background-color: #f2f2f2;
-        }
+th, td {
+    padding: 6px;
+    text-align: left;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+th {
+    background-color: #f2f2f2;
+}
     </style>
 </head>
 <body>
