@@ -477,40 +477,33 @@
 
        function exportToPDF() {
     const doc = new jsPDF();
-    let yOffset = 10; // Początkowa pozycja Y
+    const source = document.createElement('div');
+    
+    // Skopiuj tabelę i wykresy do nowego elementu
+    const dataTable = document.getElementById('dataTable');
+    const usageChart = document.getElementById('usageChart');
+    const dailyUsageChart = document.getElementById('dailyUsageChart');
+    const filteredUsageChart = document.getElementById('filteredUsageChart');
+    const filteredDailyUsageChart = document.getElementById('filteredDailyUsageChart');
 
-    // Eksport tabeli
-    const table = document.querySelector('#dataTable table');
-    if (table) {
-        doc.text("Tabela zużycia", 10, yOffset);
-        html2canvas(table).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            doc.addImage(imgData, 'PNG', 10, yOffset + 10, 190, 0);
-            yOffset += canvas.height * 0.75; // Dostosuj offset na podstawie wysokości tabeli
+    if (dataTable) source.appendChild(dataTable.cloneNode(true));
+    if (usageChart) source.appendChild(usageChart.cloneNode(true));
+    if (dailyUsageChart) source.appendChild(dailyUsageChart.cloneNode(true));
+    if (filteredUsageChart) source.appendChild(filteredUsageChart.cloneNode(true));
+    if (filteredDailyUsageChart) source.appendChild(filteredDailyUsageChart.cloneNode(true));
 
-            // Eksport wykresów
-            exportChartToPDF('usageChart', doc, yOffset, 'Wykres zużycia gazu i prądu');
-            exportChartToPDF('dailyUsageChart', doc, yOffset, 'Wykres dziennego zużycia gazu i prądu');
-            exportChartToPDF('filteredUsageChart', doc, yOffset, 'Wykres zużycia gazu i prądu (przefiltrowane)');
-            exportChartToPDF('filteredDailyUsageChart', doc, yOffset, 'Wykres dziennego zużycia gazu i prądu (przefiltrowane)');
-            
-            doc.save('zuzycie.pdf');
-        });
-    } else {
-        doc.text("Brak danych do eksportu.", 10, yOffset);
-        doc.save('zuzycie.pdf');
-    }
-}
-
-function exportChartToPDF(chartId, doc, yOffset, title) {
-    const canvas = document.getElementById(chartId);
-    if (canvas) {
-        const imgData = canvas.toDataURL('image/png');
-        doc.addPage();
-        doc.text(title, 10, yOffset);
-        doc.addImage(imgData, 'PNG', 10, yOffset + 10, 190, 0);
-        yOffset += canvas.height * 0.75; // Dostosuj offset na podstawie wysokości wykresu
-    }
+    // Ustawienia dla eksportu
+    doc.fromHTML(
+        source,
+        15,
+        15,
+        {
+            'width': 180,
+            'elementHandlers': elementHandler
+        }
+    );
+    
+    doc.save('zuzycie.pdf');
 }
         window.onload = updateCharts;
     </script>
