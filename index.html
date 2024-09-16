@@ -513,7 +513,7 @@ function filterAndUpdateCharts() {
     const endISO = formatDateToISO(endDate);
 
     let data = JSON.parse(localStorage.getItem('usageData')) || [];
-    data = data.concat(builtInData);
+    data = data.concat(data);
     data = data.filter(entry => {
         const entryISO = formatDateToISO(entry.date);
         return entryISO >= startISO && entryISO <= endISO;
