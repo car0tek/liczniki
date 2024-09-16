@@ -488,6 +488,17 @@
             generateTable(data);
         }
 
+
+function formatDateToISO(date) {
+    const [day, month, year] = date.split('-');
+    return `${year}-${month}-${day}`;
+}
+
+function formatISOToDate(isoDate) {
+    const [year, month, day] = isoDate.split('-');
+    return `${day}-${month}-${year}`;
+}
+
 function filterAndUpdateCharts() {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
@@ -497,9 +508,16 @@ function filterAndUpdateCharts() {
         return;
     }
 
+    // Konwertowanie daty z formatu dd-mm-rrrr na rrrr-mm-dd
+    const startISO = formatDateToISO(startDate);
+    const endISO = formatDateToISO(endDate);
+
     let data = JSON.parse(localStorage.getItem('usageData')) || [];
-    data = data.concat(builtInData); // Łączenie danych z lokalnego magazynu i z wbudowanej tablicy
-    data = data.filter(entry => entry.date >= startDate && entry.date <= endDate);
+    data = data.concat(builtInData);
+    data = data.filter(entry => {
+        const entryISO = formatDateToISO(entry.date);
+        return entryISO >= startISO && entryISO <= endISO;
+    });
 
     if (data.length === 0) {
         alert("Brak danych w wybranym zakresie.");
@@ -589,7 +607,6 @@ function filterAndUpdateCharts() {
 
     generateFilteredTable(data);
 }
-
         function generateTable(data) {
             const tableContainer = document.getElementById('dataTable');
             tableContainer.innerHTML = '';
