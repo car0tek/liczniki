@@ -505,7 +505,7 @@
             const tbody = document.createElement('tbody');
 
             const headerRow = document.createElement('tr');
-            ['Data', 'Stan licznika gazu', 'Stan licznika prądu', 'Dzienne zużycie gazu', 'Dzienne zużycie prądu'].forEach(text => {
+            ['Data', 'Licznik gazu', 'Licznik prądu', 'Zużycie gazu', 'Zużycie prądu'].forEach(text => {
                 const th = document.createElement('th');
                 th.textContent = text;
                 headerRow.appendChild(th);
@@ -549,100 +549,105 @@
         }
 
         function filterAndUpdateCharts() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
 
-            if (!startDate || !endDate) {
-                alert("Wprowadź zakres dat.");
-                return;
-            }
+    if (!startDate || !endDate) {
+        alert("Wprowadź zakres dat.");
+        return;
+    }
 
-            const data = JSON.parse(localStorage.getItem('usageData')) || [];
-            const filteredData = data.filter(entry => entry.date >= startDate && entry.date <= endDate);
+    console.log("Filtruję dane od:", startDate, "do:", endDate);
 
-            if (filteredData.length === 0) {
-                alert("Brak danych dla wybranego zakresu.");
-                return;
-            }
+    const data = JSON.parse(localStorage.getItem('usageData')) || [];
+    console.log("Dane przed filtrowaniem:", data);
 
-            const filteredLabels = Array.from(new Set(filteredData.map(entry => entry.date))).sort();
-            const filteredDataMap = new Map(filteredData.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
+    const filteredData = data.filter(entry => entry.date >= startDate && entry.date <= endDate);
+    console.log("Dane po filtrowaniu:", filteredData);
 
-            const filteredGasData = [];
-            const filteredElectricityData = [];
+    if (filteredData.length === 0) {
+        alert("Brak danych dla wybranego zakresu.");
+        return;
+    }
 
-            filteredLabels.forEach(date => {
-                if (filteredDataMap.has(date)) {
-                    const { gas, electricity } = filteredDataMap.get(date);
-                    filteredGasData.push(gas);
-                    filteredElectricityData.push(electricity);
-                }
-            });
+    const filteredLabels = Array.from(new Set(filteredData.map(entry => entry.date))).sort();
+    const filteredDataMap = new Map(filteredData.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
 
-            const ctxFiltered = document.getElementById('filteredUsageChart').getContext('2d');
-            const ctxFiltered2 = document.getElementById('filteredDailyUsageChart').getContext('2d');
+    const filteredGasData = [];
+    const filteredElectricityData = [];
 
-            const filteredUsageChart = new Chart(ctxFiltered, {
-                type: 'line',
-                data: {
-                    labels: filteredLabels,
-                    datasets: [
-                        {
-                            label: 'Zużycie gazu (przefiltrowane)',
-                            data: filteredGasData,
-                            borderColor: 'blue',
-                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                            fill: true
-                        },
-                        {
-                            label: 'Zużycie prądu (przefiltrowane)',
-                            data: filteredElectricityData,
-                            borderColor: 'yellow',
-                            backgroundColor: 'rgba(255, 255, 0, 0.1)',
-                            fill: true
-                        }
-                    ]
-                }
-            });
-
-            const filteredDailyGasData = [];
-            const filteredDailyElectricityData = [];
-            let filteredDailyLabels = [];
-
-            filteredData.forEach((entry, index) => {
-                if (index > 0) {
-                    const prevEntry = filteredData[index - 1];
-                    filteredDailyLabels.push(entry.date);
-                    filteredDailyGasData.push(entry.gas - prevEntry.gas);
-                    filteredDailyElectricityData.push(entry.electricity - prevEntry.electricity);
-                }
-            });
-
-            const filteredDailyUsageChart = new Chart(ctxFiltered2, {
-                type: 'line',
-                data: {
-                    labels: filteredDailyLabels,
-                    datasets: [
-                        {
-                            label: 'Dzienne zużycie gazu (przefiltrowane)',
-                            data: filteredDailyGasData,
-                            borderColor: 'blue',
-                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                            fill: true
-                        },
-                        {
-                            label: 'Dzienne zużycie prądu (przefiltrowane)',
-                            data: filteredDailyElectricityData,
-                            borderColor: 'yellow',
-                            backgroundColor: 'rgba(255, 255, 0, 0.1)',
-                            fill: true
-                        }
-                    ]
-                }
-            });
-
-            renderTable('filteredDataTable', filteredData);
+    filteredLabels.forEach(date => {
+        if (filteredDataMap.has(date)) {
+            const { gas, electricity } = filteredDataMap.get(date);
+            filteredGasData.push(gas);
+            filteredElectricityData.push(electricity);
         }
+    });
+
+    const ctxFiltered = document.getElementById('filteredUsageChart').getContext('2d');
+    const ctxFiltered2 = document.getElementById('filteredDailyUsageChart').getContext('2d');
+
+    const filteredUsageChart = new Chart(ctxFiltered, {
+        type: 'line',
+        data: {
+            labels: filteredLabels,
+            datasets: [
+                {
+                    label: 'Zużycie gazu (przefiltrowane)',
+                    data: filteredGasData,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    fill: true
+                },
+                {
+                    label: 'Zużycie prądu (przefiltrowane)',
+                    data: filteredElectricityData,
+                    borderColor: 'yellow',
+                    backgroundColor: 'rgba(255, 255, 0, 0.1)',
+                    fill: true
+                }
+            ]
+        }
+    });
+
+    const filteredDailyGasData = [];
+    const filteredDailyElectricityData = [];
+    let filteredDailyLabels = [];
+
+    filteredData.forEach((entry, index) => {
+        if (index > 0) {
+            const prevEntry = filteredData[index - 1];
+            filteredDailyLabels.push(entry.date);
+            filteredDailyGasData.push(entry.gas - prevEntry.gas);
+            filteredDailyElectricityData.push(entry.electricity - prevEntry.electricity);
+        }
+    });
+
+    const filteredDailyUsageChart = new Chart(ctxFiltered2, {
+        type: 'line',
+        data: {
+            labels: filteredDailyLabels,
+            datasets: [
+                {
+                    label: 'Dzienne zużycie gazu (przefiltrowane)',
+                    data: filteredDailyGasData,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    fill: true
+                },
+                {
+                    label: 'Dzienne zużycie prądu (przefiltrowane)',
+                    data: filteredDailyElectricityData,
+                    borderColor: 'yellow',
+                    backgroundColor: 'rgba(255, 255, 0, 0.1)',
+                    fill: true
+                }
+            ]
+        }
+    });
+
+    renderTable('filteredDataTable', filteredData);
+}
 
         // Początkowe wywołanie, aby załadować dane przy pierwszym uruchomieniu
         updateCharts();
