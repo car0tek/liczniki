@@ -475,23 +475,43 @@
             updateTable(filteredData, 'filteredDataTable');
         }
 
-        function exportToPDF() {
-            const doc = new jsPDF();
-            doc.text("Tabela zużycia", 10, 10);
+       function exportToPDF() {
+    const doc = new jsPDF();
+    let yOffset = 10; // Początkowa pozycja Y
 
-            const table = document.querySelector('#dataTable table');
-            if (table) {
-                html2canvas(table).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    doc.addImage(imgData, 'PNG', 10, 20, 190, 0);
-                    doc.save('zuzycie.pdf');
-                });
-            } else {
-                doc.text("Brak danych do eksportu.", 10, 20);
-                doc.save('zuzycie.pdf');
-            }
-        }
+    // Eksport tabeli
+    const table = document.querySelector('#dataTable table');
+    if (table) {
+        doc.text("Tabela zużycia", 10, yOffset);
+        html2canvas(table).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            doc.addImage(imgData, 'PNG', 10, yOffset + 10, 190, 0);
+            yOffset += canvas.height * 0.75; // Dostosuj offset na podstawie wysokości tabeli
 
+            // Eksport wykresów
+            exportChartToPDF('usageChart', doc, yOffset, 'Wykres zużycia gazu i prądu');
+            exportChartToPDF('dailyUsageChart', doc, yOffset, 'Wykres dziennego zużycia gazu i prądu');
+            exportChartToPDF('filteredUsageChart', doc, yOffset, 'Wykres zużycia gazu i prądu (przefiltrowane)');
+            exportChartToPDF('filteredDailyUsageChart', doc, yOffset, 'Wykres dziennego zużycia gazu i prądu (przefiltrowane)');
+            
+            doc.save('zuzycie.pdf');
+        });
+    } else {
+        doc.text("Brak danych do eksportu.", 10, yOffset);
+        doc.save('zuzycie.pdf');
+    }
+}
+
+function exportChartToPDF(chartId, doc, yOffset, title) {
+    const canvas = document.getElementById(chartId);
+    if (canvas) {
+        const imgData = canvas.toDataURL('image/png');
+        doc.addPage();
+        doc.text(title, 10, yOffset);
+        doc.addImage(imgData, 'PNG', 10, yOffset + 10, 190, 0);
+        yOffset += canvas.height * 0.75; // Dostosuj offset na podstawie wysokości wykresu
+    }
+}
         window.onload = updateCharts;
     </script>
 </body>
