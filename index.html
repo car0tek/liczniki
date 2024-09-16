@@ -186,6 +186,11 @@
             }
         }
 
+        function formatDateToYYYYMMDD(dateStr) {
+            const [day, month, year] = dateStr.split('-');
+            return `${year}-${month}-${day}`;
+        }
+
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const reader = new FileReader();
@@ -548,41 +553,54 @@
             return td;
         }
 
+ 
         function filterAndUpdateCharts() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
 
-    if (!startDate || !endDate) {
-        alert("Wprowadź zakres dat.");
-        return;
-    }
+            if (!startDate || !endDate) {
+                alert("Proszę wprowadzić obie daty.");
+                return;
+            }
 
-    console.log("Filtruję dane od:", startDate, "do:", endDate);
+            const start = formatDateToYYYYMMDD(startDate);
+            const end = formatDateToYYYYMMDD(endDate);
 
-    const data = JSON.parse(localStorage.getItem('usageData')) || [];
-    console.log("Dane przed filtrowaniem:", data);
+            const data = JSON.parse(localStorage.getItem('usageData')) || [];
+            const filteredData = data.filter(entry => {
+                const entryDate = entry.date;
+                return entryDate >= start && entryDate <= end;
+            });
 
-    const filteredData = data.filter(entry => entry.date >= startDate && entry.date <= endDate);
-    console.log("Dane po filtrowaniu:", filteredData);
-
-    if (filteredData.length === 0) {
-        alert("Brak danych dla wybranego zakresu.");
-        return;
-    }
-
-    const filteredLabels = Array.from(new Set(filteredData.map(entry => entry.date))).sort();
-    const filteredDataMap = new Map(filteredData.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
-
-    const filteredGasData = [];
-    const filteredElectricityData = [];
-
-    filteredLabels.forEach(date => {
-        if (filteredDataMap.has(date)) {
-            const { gas, electricity } = filteredDataMap.get(date);
-            filteredGasData.push(gas);
-            filteredElectricityData.push(electricity);
+updateFilteredCharts(filteredData);
         }
-    });
+
+        function updateFilteredCharts(filteredData) {
+            if (filteredData.length === 0) return;
+
+            const allDates = Array.from(new Set(filteredData.map(entry => entry.date))).sort();
+            const dataMap = new Map(filteredData.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
+
+            const gasData = [];
+            const electricityData = [];
+            const labels = [];
+            
+            let prevGas = 0;
+            let prevElectricity = 0;
+
+            allDates.forEach(date => {
+                labels.push(date);
+                if (dataMap.has(date)) {
+                    const { gas, electricity } = dataMap.get(date);
+                    gasData.push(gas);
+                    electricityData.push(electricity);
+                    prevGas = gas;
+                    prevElectricity = electricity;
+                } else {
+                    gasData.push(prevGas);
+                    electricityData.push(prevElectricity);
+                }
+            });
 
     const ctxFiltered = document.getElementById('filteredUsageChart').getContext('2d');
     const ctxFiltered2 = document.getElementById('filteredDailyUsageChart').getContext('2d');
