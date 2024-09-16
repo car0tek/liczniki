@@ -6,118 +6,15 @@
     <title>Monitorowanie zużycia gazu i prądu</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse/papaparse.min.js"></script>
     <style>
-     /* Ustawienia dla całego tła */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: black;
-            background: url('https://github.com/car0tek/liczniki/blob/main/DJI_0636.JPG') no-repeat center center fixed;
-            background-size: cover;
-            position: relative;
-        }
-
-        /* Dodaj ciemny overlay z 50% przezroczystością */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* 50% przyciemnienie */
-            z-index: -1; /* Umieść za treścią */
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.8); /* Tło pod tekstem o 80% przejrzystości */
-            padding: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 1em;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5em;
-        }
-
-        input, button {
-            width: 100%;
-            padding: 0.5em;
-            margin-bottom: 1em;
-        }
-
-        button {
-            padding: 0.5em 1em;
-        }
-
-        .buttons {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        canvas {
-            width: 100%;
-            max-width: 1000px;
-        }
-
-        .tables-container {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .table-wrapper {
-            width: 48%;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-
-        th, td {
-            padding: 1px;
-            text-align: center;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
+        /* Twoje style */
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Monitorowanie zużycia gazu i prądu</h1>
-
-        <!-- Formularz wprowadzania danych -->
-        <div class="form-group">
-            <label for="date">Data:</label>
-            <input type="date" id="date">
-        </div>
-        <div class="form-group">
-            <label for="gas">Stan licznika gazu:</label>
-            <input type="number" id="gas" placeholder="Wprowadź stan licznika gazu">
-        </div>
-        <div class="form-group">
-            <label for="electricity">Stan licznika prądu:</label>
-            <input type="number" id="electricity" placeholder="Wprowadź stan licznika prądu">
-        </div>
-
-        <div class="buttons">
-            <button onclick="saveData()">Zapisz dane</button>
-            <button onclick="clearData()">Wyczyść dane</button>
-        </div>
+        <!-- Twoje formularze i przyciski -->
+        <button onclick="fetchCSV()">Pobierz dane z CSV</button>
 
         <!-- Import z Excela -->
         <h2>Importuj dane z Excela</h2>
@@ -214,6 +111,31 @@
 
             reader.readAsArrayBuffer(file);
         });
+
+        function fetchCSV() {
+            fetch('https://github.com/car0tek/liczniki/blob/main/liczniki.csv')
+                .then(response => response.text())
+                .then(text => {
+                    Papa.parse(text, {
+                        header: false,
+                        delimiter: ';',
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            let usageData = JSON.parse(localStorage.getItem('usageData')) || [];
+                            results.data.slice(1).forEach(row => {
+                                let [date, gas, electricity] = row;
+                                if (date && gas && electricity) {
+                                    usageData.push({ date, gas: parseFloat(gas), electricity: parseFloat(electricity) });
+                                }
+                            });
+
+                            localStorage.setItem('usageData', JSON.stringify(usageData));
+                            updateCharts();
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching CSV:', error));
+        }
 
         function updateCharts() {
             const data = JSON.parse(localStorage.getItem('usageData')) || [];
@@ -316,7 +238,7 @@
             data = data.filter(entry => entry.date >= startDate && entry.date <= endDate);
 
             if (data.length === 0) {
-                alert("Brak danych w wybranym zakresie.");
+                alert("Brak danych w wybranym zakresie dat.");
                 return;
             }
 
@@ -401,11 +323,12 @@
                 }
             });
 
-            generateFilteredTable(data);
+            generateTable(data, true);
         }
 
-        function generateTable(data) {
-            const tableContainer = document.getElementById('dataTable');
+        function generateTable(data, isFiltered = false) {
+            const tableId = isFiltered ? 'filteredDataTable' : 'dataTable';
+            const tableContainer = document.getElementById(tableId);
             tableContainer.innerHTML = '';
 
             if (data.length === 0) {
@@ -413,114 +336,17 @@
                 return;
             }
 
-            const table = document.createElement('table');
-            const thead = document.createElement('thead');
-            const tbody = document.createElement('tbody');
-
-            const headerRow = document.createElement('tr');
-            ['Data', 'Licznik Gazu', 'Licznik prądu', 'Zużycie gazu', 'Zużycie prądu'].forEach(text => {
-                const th = document.createElement('th');
-                th.textContent = text;
-                headerRow.appendChild(th);
+            let table = '<table><thead><tr><th>Data</th><th>Zużycie gazu</th><th>Zużycie prądu</th></tr></thead><tbody>';
+            data.forEach(entry => {
+                table += `<tr><td>${entry.date}</td><td>${entry.gas.toFixed(2)}</td><td>${entry.electricity.toFixed(2)}</td></tr>`;
             });
+            table += '</tbody></table>';
 
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-
-            let prevGas = 0;
-            let prevElectricity = 0;
-
-            data.forEach((entry, index) => {
-                const row = document.createElement('tr');
-                const dateCell = document.createElement('td');
-                dateCell.textContent = entry.date;
-                row.appendChild(dateCell);
-
-                const gasCell = document.createElement('td');
-                gasCell.textContent = entry.gas;
-                row.appendChild(gasCell);
-
-                const electricityCell = document.createElement('td');
-                electricityCell.textContent = entry.electricity;
-                row.appendChild(electricityCell);
-
-                const dailyGasCell = document.createElement('td');
-                dailyGasCell.textContent = index === 0 ? 'N/A' : (entry.gas - prevGas).toFixed(2);
-                row.appendChild(dailyGasCell);
-
-                const dailyElectricityCell = document.createElement('td');
-                dailyElectricityCell.textContent = index === 0 ? 'N/A' : (entry.electricity - prevElectricity).toFixed(2);
-                row.appendChild(dailyElectricityCell);
-
-                tbody.appendChild(row);
-
-                prevGas = entry.gas;
-                prevElectricity = entry.electricity;
-            });
-
-            table.appendChild(tbody);
-            tableContainer.appendChild(table);
+            tableContainer.innerHTML = table;
         }
 
-        function generateFilteredTable(data) {
-            const tableContainer = document.getElementById('filteredDataTable');
-            tableContainer.innerHTML = '';
-
-            if (data.length === 0) {
-                tableContainer.innerHTML = '<p>Brak danych do wyświetlenia.</p>';
-                return;
-            }
-
-            const table = document.createElement('table');
-            const thead = document.createElement('thead');
-            const tbody = document.createElement('tbody');
-
-            const headerRow = document.createElement('tr');
-            ['Data', 'Licznik gazu', 'Licznik prądu', 'Zużycie gazu', 'Zużycie prądu'].forEach(text => {
-                const th = document.createElement('th');
-                th.textContent = text;
-                headerRow.appendChild(th);
-            });
-
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-
-            let prevGas = 0;
-            let prevElectricity = 0;
-
-            data.forEach((entry, index) => {
-                const row = document.createElement('tr');
-                const dateCell = document.createElement('td');
-                dateCell.textContent = entry.date;
-                row.appendChild(dateCell);
-
-                const gasCell = document.createElement('td');
-                gasCell.textContent = entry.gas;
-                row.appendChild(gasCell);
-
-                const electricityCell = document.createElement('td');
-                electricityCell.textContent = entry.electricity;
-                row.appendChild(electricityCell);
-
-                const dailyGasCell = document.createElement('td');
-                dailyGasCell.textContent = index === 0 ? 'N/A' : (entry.gas - prevGas).toFixed(2);
-                row.appendChild(dailyGasCell);
-
-                const dailyElectricityCell = document.createElement('td');
-                dailyElectricityCell.textContent = index === 0 ? 'N/A' : (entry.electricity - prevElectricity).toFixed(2);
-                row.appendChild(dailyElectricityCell);
-
-                tbody.appendChild(row);
-
-                prevGas = entry.gas;
-                prevElectricity = entry.electricity;
-            });
-
-            table.appendChild(tbody);
-            tableContainer.appendChild(table);
-        }
-
-        window.onload = updateCharts;
+        // Inicjalizacja wykresów przy pierwszym załadowaniu
+        document.addEventListener('DOMContentLoaded', updateCharts);
     </script>
 </body>
 </html>
