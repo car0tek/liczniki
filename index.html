@@ -216,7 +216,7 @@
         });
 
         function updateCharts() {
-            const data = [
+            const builtInData = [
     { date: '2023-12-11', gas: 2850, electricity: 124 },
     { date: '2023-12-12', gas: 2863, electricity: 140 },
     { date: '2023-12-13', gas: 2873, electricity: 165 },
@@ -512,8 +512,13 @@ function filterAndUpdateCharts() {
     const startISO = formatDateToISO(startDate);
     const endISO = formatDateToISO(endDate);
 
+    // Pobranie danych z lokalnego magazynu
     let data = JSON.parse(localStorage.getItem('usageData')) || [];
-    data = data.concat(data);
+    
+    // Dodanie danych wbudowanych
+    data = data.concat(builtInData);
+
+    // Filtrowanie danych
     data = data.filter(entry => {
         const entryISO = formatDateToISO(entry.date);
         return entryISO >= startISO && entryISO <= endISO;
@@ -524,6 +529,7 @@ function filterAndUpdateCharts() {
         return;
     }
 
+    // Przetwarzanie danych na potrzeby wykresów
     const allDates = Array.from(new Set(data.map(entry => entry.date))).sort();
     const dataMap = new Map(data.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
 
