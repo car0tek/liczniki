@@ -6,17 +6,22 @@
     <title>Monitorowanie zużycia gazu i prądu</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable"></script>
     <style>
+        /* Ustawienia dla całego tła */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             color: black;
-            background: url('https://github.com/car0tek/liczniki/blob/main/97D0FC7838686322584501E3974E5582.JPEG') no-repeat center center fixed;
+            background: url('https://github.com/car0tek/liczniki/blob/main/DJI_0636.JPG') no-repeat center center fixed;
             background-size: cover;
             position: relative;
         }
 
+        /* Dodaj ciemny overlay z 50% przezroczystością */
         body::before {
             content: '';
             position: fixed;
@@ -24,14 +29,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: -1;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% przyciemnienie */
+            z-index: -1; /* Umieść za treścią */
         }
 
         .container {
             max-width: 1000px;
             margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.8); /* Tło pod tekstem o 80% przejrzystości */
             padding: 20px;
         }
 
@@ -83,9 +88,9 @@
         }
 
         th, td {
-            padding: 1px;
-            text-align: center;
-            font-size: 13px;
+            padding: 6px;
+            text-align: left;
+            font-size: 11px;
             white-space: nowrap;
         }
 
@@ -132,6 +137,7 @@
             <input type="date" id="endDate">
         </div>
         <button onclick="filterAndUpdateCharts()">Filtruj dane</button>
+        <button onclick="exportToPDF()">Eksportuj do PDF</button>
 
         <!-- Wykresy -->
         <h2>Wykres zużycia gazu i prądu</h2>
@@ -155,23 +161,13 @@
         </div>
     </div>
     <script>
-        function formatDateToYYYYMMDD(date) {
-            const [day, month, year] = date.split('-');
-            return `${year}-${month}-${day}`;
-        }
-
-        function parseDateToYYYYMMDD(date) {
-            const [year, month, day] = date.split('-');
-            return `${day}-${month}-${year}`;
-        }
-
         function excelDateToJSDate(excelDate) {
-            const epoch = new Date(Date.UTC(1899, 11, 30));
-            return new Date(epoch.getTime() + (excelDate * 24 * 60 * 60 * 1000));
+            const date = new Date((excelDate - 25569) * 86400 * 1000);
+            return date.toISOString().split('T')[0];
         }
 
         function saveData() {
-            const date = formatDateToYYYYMMDD(document.getElementById('date').value);
+            const date = document.getElementById('date').value;
             const gas = parseFloat(document.getElementById('gas').value);
             const electricity = parseFloat(document.getElementById('electricity').value);
 
@@ -209,7 +205,7 @@
                 sheetData.slice(1).forEach(row => {
                     let [date, gas, electricity] = row;
                     if (typeof date === 'number') {
-                        date = excelDateToJSDate(date).toISOString().split('T')[0];
+                        date = excelDateToJSDate(date);
                     }
                     if (date && gas && electricity) {
                         usageData.push({ date, gas: parseFloat(gas), electricity: parseFloat(electricity) });
@@ -224,193 +220,7 @@
         });
 
         function updateCharts() {
-            // Dodanie stałych danych
-            const data = [
-    { date: '2023-12-11', gas: 2850, electricity: 124 },
-    { date: '2023-12-12', gas: 2863, electricity: 140 },
-    { date: '2023-12-13', gas: 2873, electricity: 165 },
-    { date: '2023-12-14', gas: 2885, electricity: 177 },
-    { date: '2023-12-16', gas: 2912, electricity: 219 },
-    { date: '2023-12-17', gas: 2922, electricity: 230 },
-    { date: '2023-12-18', gas: 2933, electricity: 254 },
-    { date: '2023-12-19', gas: 2939, electricity: 270 },
-    { date: '2023-12-20', gas: 2950, electricity: 280 },
-    { date: '2023-12-21', gas: 2966, electricity: 298 },
-    { date: '2023-12-22', gas: 2979, electricity: 316 },
-    { date: '2023-12-23', gas: 2993, electricity: 348 },
-    { date: '2023-12-24', gas: 3008, electricity: 389 },
-    { date: '2023-12-26', gas: 3019, electricity: 444 },
-    { date: '2023-12-27', gas: 3030, electricity: 463 },
-    { date: '2023-12-28', gas: 3041, electricity: 485 },
-    { date: '2023-12-29', gas: 3051, electricity: 508 },
-    { date: '2024-01-01', gas: 3073, electricity: 547 },
-    { date: '2024-01-02', gas: 3087, electricity: 565 },
-    { date: '2024-01-03', gas: 3100, electricity: 586 },
-    { date: '2024-01-04', gas: 3111, electricity: 602 },
-    { date: '2024-01-05', gas: 3124, electricity: 624 },
-    { date: '2024-01-06', gas: 3136, electricity: 642 },
-    { date: '2024-01-07', gas: 3155, electricity: 672 },
-    { date: '2024-01-08', gas: 3171, electricity: 692 },
-    { date: '2024-01-09', gas: 3189, electricity: 710 },
-    { date: '2024-01-10', gas: 3207, electricity: 735 },
-    { date: '2024-01-11', gas: 3224, electricity: 754 },
-    { date: '2024-01-13', gas: 3253, electricity: 802 },
-    { date: '2024-01-14', gas: 3268, electricity: 823 },
-    { date: '2024-01-15', gas: 3278, electricity: 845 },
-    { date: '2024-01-16', gas: 3291, electricity: 866 },
-    { date: '2024-01-17', gas: 3301, electricity: 884 },
-    { date: '2024-01-18', gas: 3318, electricity: 907 },
-    { date: '2024-01-19', gas: 3329, electricity: 926 },
-    { date: '2024-01-20', gas: 3344, electricity: 953 },
-    { date: '2024-01-21', gas: 3354, electricity: 953 },
-    { date: '2024-01-22', gas: 3367, electricity: 991 },
-    { date: '2024-01-23', gas: 3381, electricity: 1009 },
-    { date: '2024-01-24', gas: 3394, electricity: 1028 },
-    { date: '2024-01-25', gas: 3409, electricity: 1048 },
-    { date: '2024-01-26', gas: 3419, electricity: 1076 },
-    { date: '2024-01-28', gas: 3445, electricity: 1126 },
-    { date: '2024-01-29', gas: 3452, electricity: 1141 },
-    { date: '2024-01-31', gas: 3473, electricity: 1176 },
-    { date: '2024-02-01', gas: 3482, electricity: 1197 },
-    { date: '2024-02-04', gas: 3485, electricity: 1221 },
-    { date: '2024-02-06', gas: 3485, electricity: 1234 },
-    { date: '2024-02-07', gas: 3502, electricity: 1245 },
-    { date: '2024-02-10', gas: 3535, electricity: 1271 },
-    { date: '2024-02-11', gas: 3557, electricity: 1297 },
-    { date: '2024-02-12', gas: 3567, electricity: 1312 },
-    { date: '2024-02-13', gas: 3575, electricity: 1331 },
-    { date: '2024-02-14', gas: 3583, electricity: 1350 },
-    { date: '2024-02-15', gas: 3590, electricity: 1365 },
-    { date: '2024-02-16', gas: 3594, electricity: 1376 },
-    { date: '2024-02-18', gas: 3599, electricity: 1394 },
-    { date: '2024-02-19', gas: 3610, electricity: 1407 },
-    { date: '2024-02-21', gas: 3631, electricity: 1437 },
-    { date: '2024-02-22', gas: 3638, electricity: 1453 },
-    { date: '2024-02-23', gas: 3643, electricity: 1473 },
-    { date: '2024-02-24', gas: 3651, electricity: 1485 },
-    { date: '2024-02-25', gas: 3656, electricity: 1502 },
-    { date: '2024-02-26', gas: 3663, electricity: 1521 },
-    { date: '2024-02-27', gas: 3667, electricity: 1534 },
-    { date: '2024-02-28', gas: 3675, electricity: 1552 },
-    { date: '2024-02-29', gas: 3679, electricity: 1564 },
-    { date: '2024-03-01', gas: 3682, electricity: 1579 },
-    { date: '2024-03-02', gas: 3687, electricity: 1599 },
-    { date: '2024-03-03', gas: 3691, electricity: 1617 },
-    { date: '2024-03-04', gas: 3696, electricity: 1634 },
-    { date: '2024-03-05', gas: 3702, electricity: 1651 },
-    { date: '2024-03-06', gas: 3712, electricity: 1672 },
-    { date: '2024-03-07', gas: 3718, electricity: 1684 },
-    { date: '2024-03-10', gas: 3737, electricity: 1724 },
-    { date: '2024-03-11', gas: 3742, electricity: 1738 },
-    { date: '2024-03-12', gas: 3750, electricity: 1752 },
-    { date: '2024-03-13', gas: 3753, electricity: 1768 },
-    { date: '2024-03-14', gas: 3759, electricity: 1785 },
-    { date: '2024-03-15', gas: 3768, electricity: 1809 },
-    { date: '2024-03-16', gas: 3770, electricity: 1818 },
-    { date: '2024-03-17', gas: 3778, electricity: 1843 },
-    { date: '2024-03-18', gas: 3785, electricity: 1856 },
-    { date: '2024-03-19', gas: 3791, electricity: 1870 },
-    { date: '2024-03-21', gas: 3807, electricity: 1899 },
-    { date: '2024-03-24', gas: 3827, electricity: 1956 },
-    { date: '2024-03-25', gas: 3834, electricity: 1971 },
-    { date: '2024-03-26', gas: 3839, electricity: 1991 },
-    { date: '2024-03-27', gas: 3845, electricity: 2009 },
-    { date: '2024-03-28', gas: 3849, electricity: 2025 },
-    { date: '2024-03-30', gas: 3859, electricity: 2081 },
-    { date: '2024-03-31', gas: 3863, electricity: 2116 },
-    { date: '2024-04-01', gas: 3867, electricity: 2133 },
-    { date: '2024-04-02', gas: 3871, electricity: 2152 },
-    { date: '2024-04-03', gas: 3874, electricity: 2169 },
-    { date: '2024-04-04', gas: 3879, electricity: 2184 },
-    { date: '2024-04-05', gas: 3882, electricity: 2200 },
-    { date: '2024-04-06', gas: 3886, electricity: 2230 },
-    { date: '2024-04-07', gas: 3889, electricity: 2247 },
-    { date: '2024-04-08', gas: 3891, electricity: 2261 },
-    { date: '2024-04-09', gas: 3893, electricity: 2274 },
-    { date: '2024-04-10', gas: 3896, electricity: 2289 },
-    { date: '2024-04-11', gas: 3898, electricity: 2302 },
-    { date: '2024-04-15', gas: 3911, electricity: 2353 },
-    { date: '2024-04-16', gas: 3915, electricity: 2374 },
-    { date: '2024-04-17', gas: 3921, electricity: 2387 },
-    { date: '2024-04-18', gas: 3928, electricity: 2405 },
-    { date: '2024-04-19', gas: 3936, electricity: 2429 },
-    { date: '2024-04-20', gas: 3941, electricity: 2446 },
-    { date: '2024-04-21', gas: 3948, electricity: 2474 },
-    { date: '2024-04-22', gas: 3953, electricity: 2490 },
-    { date: '2024-04-23', gas: 3959, electricity: 2507 },
-    { date: '2024-04-24', gas: 3965, electricity: 2521 },
-    { date: '2024-04-25', gas: 3970, electricity: 2538 },
-    { date: '2024-04-28', gas: 3980, electricity: 2573 },
-    { date: '2024-05-03', gas: 3986, electricity: 2621 },
-    { date: '2024-05-05', gas: 3991, electricity: 2638 },
-    { date: '2024-05-06', gas: 3994, electricity: 2658 },
-    { date: '2024-05-07', gas: 3997, electricity: 2667 },
-    { date: '2024-05-08', gas: 4000, electricity: 2683 },
-    { date: '2024-05-09', gas: 4004, electricity: 2701 },
-    { date: '2024-05-10', gas: 4006, electricity: 2718 },
-    { date: '2024-05-12', gas: 4006, electricity: 2725 },
-    { date: '2024-05-13', gas: 4009, electricity: 2737 },
-    { date: '2024-05-14', gas: 4012, electricity: 2750 },
-    { date: '2024-05-15', gas: 4015, electricity: 2761 },
-    { date: '2024-05-21', gas: 4030, electricity: 2852 },
-    { date: '2024-05-22', gas: 4033, electricity: 2865 },
-    { date: '2024-05-23', gas: 4035, electricity: 2875 },
-    { date: '2024-05-26', gas: 4040, electricity: 2904 },
-    { date: '2024-05-27', gas: 4044, electricity: 2923 },
-    { date: '2024-05-28', gas: 4047, electricity: 2936 },
-    { date: '2024-05-29', gas: 4050, electricity: 2953 },
-    { date: '2024-06-02', gas: 4051, electricity: 2987 },
-    { date: '2024-06-03', gas: 4053, electricity: 3002 },
-    { date: '2024-06-04', gas: 4056, electricity: 3017 },
-    { date: '2024-06-05', gas: 4059, electricity: 3033 },
-    { date: '2024-06-06', gas: 4062, electricity: 3045 },
-    { date: '2024-06-07', gas: 4064, electricity: 3058 },
-    { date: '2024-06-08', gas: 4067, electricity: 3078 },
-    { date: '2024-06-09', gas: 4069, electricity: 3098 },
-    { date: '2024-06-11', gas: 4073, electricity: 3124 },
-    { date: '2024-06-12', gas: 4076, electricity: 3140 },
-    { date: '2024-06-13', gas: 4079, electricity: 3157 },
-    { date: '2024-06-14', gas: 4082, electricity: 3174 },
-    { date: '2024-06-16', gas: 4086, electricity: 3197 },
-    { date: '2024-06-17', gas: 4089, electricity: 3215 },
-    { date: '2024-06-18', gas: 4092, electricity: 3237 },
-    { date: '2024-06-19', gas: 4094, electricity: 3259 },
-    { date: '2024-06-20', gas: 4097, electricity: 3269 },
-    { date: '2024-06-21', gas: 4100, electricity: 3278 },
-    { date: '2024-06-29', gas: 4103, electricity: 3348 },
-    { date: '2024-06-30', gas: 4106, electricity: 3368 },
-    { date: '2024-07-01', gas: 4108, electricity: 3383 },
-    { date: '2024-07-09', gas: 4120, electricity: 3472 },
-    { date: '2024-07-10', gas: 4122, electricity: 3485 },
-    { date: '2024-07-11', gas: 4124, electricity: 3502 },
-    { date: '2024-07-15', gas: 4128, electricity: 3542 },
-    { date: '2024-07-29', gas: 4139, electricity: 3701 },
-    { date: '2024-08-01', gas: 4146, electricity: 3747 },
-    { date: '2024-08-02', gas: 4148, electricity: 3761 },
-    { date: '2024-08-03', gas: 4151, electricity: 3774 },
-    { date: '2024-08-04', gas: 4153, electricity: 3790 },
-    { date: '2024-08-05', gas: 4155, electricity: 3806 },
-    { date: '2024-08-06', gas: 4158, electricity: 3828 },
-    { date: '2024-08-09', gas: 4161, electricity: 3868 },
-    { date: '2024-08-24', gas: 4161, electricity: 3988 },
-    { date: '2024-08-25', gas: 4164, electricity: 4006 },
-    { date: '2024-08-27', gas: 4169, electricity: 4034 },
-    { date: '2024-09-01', gas: 4177, electricity: 4101 },
-    { date: '2024-09-02', gas: 4181, electricity: 4121 },
-    { date: '2024-09-03', gas: 4184, electricity: 4140 },
-    { date: '2024-09-04', gas: 4185, electricity: 4152 },
-    { date: '2024-09-05', gas: 4188, electricity: 4167 },
-    { date: '2024-09-06', gas: 4190, electricity: 4184 },
-    { date: '2024-09-07', gas: 4193, electricity: 4199 },
-    { date: '2024-09-08', gas: 4195, electricity: 4214 },
-    { date: '2024-09-09', gas: 4196, electricity: 4234 },
-    { date: '2024-09-10', gas: 4200, electricity: 4244 },
-    { date: '2024-09-12', gas: 4207, electricity: 4263 },
-    { date: '2024-09-13', gas: 4210, electricity: 4286 },
-    { date: '2024-09-14', gas: 4214, electricity: 4313 },
-    { date: '2024-09-15', gas: 4216, electricity: 4330 }
-           ];
-
+            const data = JSON.parse(localStorage.getItem('usageData')) || [];
             if (data.length === 0) return;
 
             const allDates = Array.from(new Set(data.map(entry => entry.date))).sort();
@@ -437,10 +247,16 @@
                 }
             });
 
-            const ctx = document.getElementById('usageChart').getContext('2d');
-            const ctx2 = document.getElementById('dailyUsageChart').getContext('2d');
+            const dailyGasUsage = [];
+            const dailyElectricityUsage = [];
 
-            new Chart(ctx, {
+            for (let i = 1; i < gasData.length; i++) {
+                dailyGasUsage.push(gasData[i] - gasData[i - 1]);
+                dailyElectricityUsage.push(electricityData[i] - electricityData[i - 1]);
+            }
+
+            const usageChartCtx = document.getElementById('usageChart').getContext('2d');
+            new Chart(usageChartCtx, {
                 type: 'line',
                 data: {
                     labels: labels,
@@ -448,99 +264,101 @@
                         {
                             label: 'Zużycie gazu',
                             data: gasData,
-                            borderColor: 'blue',
-                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                            fill: true
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: true,
                         },
                         {
                             label: 'Zużycie prądu',
                             data: electricityData,
-                            borderColor: 'yellow',
-                            backgroundColor: 'rgba(255, 255, 0, 0.1)',
-                            fill: true
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            const dailyGasData = [];
-            const dailyElectricityData = [];
-            const dailyLabels = [];
-
-            data.forEach((entry, index) => {
-                if (index > 0) {
-                    const prevEntry = data[index - 1];
-                    dailyLabels.push(entry.date);
-                    dailyGasData.push(entry.gas - prevEntry.gas);
-                    dailyElectricityData.push(entry.electricity - prevEntry.electricity);
-                }
-            });
-
-            new Chart(ctx2, {
+            const dailyUsageChartCtx = document.getElementById('dailyUsageChart').getContext('2d');
+            new Chart(dailyUsageChartCtx, {
                 type: 'line',
                 data: {
-                    labels: dailyLabels,
+                    labels: labels.slice(1),
                     datasets: [
                         {
                             label: 'Dzienne zużycie gazu',
-                            data: dailyGasData,
-                            borderColor: 'blue',
-                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                            fill: true
+                            data: dailyGasUsage,
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                            fill: true,
                         },
                         {
                             label: 'Dzienne zużycie prądu',
-                            data: dailyElectricityData,
-                            borderColor: 'yellow',
-                            backgroundColor: 'rgba(255, 255, 0, 0.1)',
-                            fill: true
+                            data: dailyElectricityUsage,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            renderTable('dataTable', data);
+            updateTable(data, 'dataTable');
         }
 
-        function renderTable(elementId, data) {
-            const tableContainer = document.getElementById(elementId);
-            tableContainer.innerHTML = '';
+        function updateTable(data, tableId) {
+            const table = document.getElementById(tableId);
+            table.innerHTML = '';
 
-            if (data.length === 0) return;
+            if (data.length === 0) {
+                table.innerHTML = '<p>Brak danych do wyświetlenia.</p>';
+                return;
+            }
 
-            const table = document.createElement('table');
-            const thead = document.createElement('thead');
-            const tbody = document.createElement('tbody');
+            let tableHTML = '<table><thead><tr><th>Data</th><th>Zużycie gazu</th><th>Zużycie prądu</th><th>Dzienne zużycie gazu</th><th>Dzienne zużycie prądu</th></tr></thead><tbody>';
+            let prevGas = 0;
+            let prevElectricity = 0;
 
-            const headerRow = document.createElement('tr');
-            ['Data', 'Stan licznika gazu', 'Stan licznika prądu'].forEach(text => {
-                const th = document.createElement('th');
-                th.textContent = text;
-                headerRow.appendChild(th);
+            data.forEach((entry, index) => {
+                const dailyGas = index > 0 ? (entry.gas - data[index - 1].gas) : 0;
+                const dailyElectricity = index > 0 ? (entry.electricity - data[index - 1].electricity) : 0;
+                tableHTML += `<tr><td>${entry.date}</td><td>${entry.gas}</td><td>${entry.electricity}</td><td>${dailyGas}</td><td>${dailyElectricity}</td></tr>`;
+                prevGas = entry.gas;
+                prevElectricity = entry.electricity;
             });
-            thead.appendChild(headerRow);
+            tableHTML += '</tbody></table>';
 
-            data.forEach(entry => {
-                const row = document.createElement('tr');
-                ['date', 'gas', 'electricity'].forEach(field => {
-                    const td = document.createElement('td');
-                    td.textContent = parseDateToYYYYMMDD(entry[field]);
-                    row.appendChild(td);
-                });
-                tbody.appendChild(row);
-            });
-
-            table.appendChild(thead);
-            table.appendChild(tbody);
-            tableContainer.appendChild(table);
+            table.innerHTML = tableHTML;
         }
 
         function filterAndUpdateCharts() {
-            const startDate = formatDateToYYYYMMDD(document.getElementById('startDate').value);
-            const endDate = formatDateToYYYYMMDD(document.getElementById('endDate').value);
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
 
             if (!startDate || !endDate) {
-                alert("Wprowadź zakres dat.");
+                alert("Wprowadź poprawny zakres dat.");
                 return;
             }
 
@@ -548,91 +366,133 @@
             const filteredData = data.filter(entry => entry.date >= startDate && entry.date <= endDate);
 
             if (filteredData.length === 0) {
-                alert("Brak danych dla wybranego zakresu.");
+                alert("Brak danych w wybranym zakresie dat.");
                 return;
             }
 
-            const filteredLabels = Array.from(new Set(filteredData.map(entry => entry.date))).sort();
-            const filteredDataMap = new Map(filteredData.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
+            const allDates = Array.from(new Set(filteredData.map(entry => entry.date))).sort();
+            const dataMap = new Map(filteredData.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
 
-            const filteredGasData = [];
-            const filteredElectricityData = [];
+            const gasData = [];
+            const electricityData = [];
+            const labels = [];
 
-            filteredLabels.forEach(date => {
-                if (filteredDataMap.has(date)) {
-                    const { gas, electricity } = filteredDataMap.get(date);
-                    filteredGasData.push(gas);
-                    filteredElectricityData.push(electricity);
+            let prevGas = 0;
+            let prevElectricity = 0;
+
+            allDates.forEach(date => {
+                labels.push(date);
+                if (dataMap.has(date)) {
+                    const { gas, electricity } = dataMap.get(date);
+                    gasData.push(gas);
+                    electricityData.push(electricity);
+                    prevGas = gas;
+                    prevElectricity = electricity;
+                } else {
+                    gasData.push(prevGas);
+                    electricityData.push(prevElectricity);
                 }
             });
 
-            const ctxFiltered = document.getElementById('filteredUsageChart').getContext('2d');
-            const ctxFiltered2 = document.getElementById('filteredDailyUsageChart').getContext('2d');
+            const dailyGasUsage = [];
+            const dailyElectricityUsage = [];
 
-            new Chart(ctxFiltered, {
+            for (let i = 1; i < gasData.length; i++) {
+                dailyGasUsage.push(gasData[i] - gasData[i - 1]);
+                dailyElectricityUsage.push(electricityData[i] - electricityData[i - 1]);
+            }
+
+            const filteredUsageChartCtx = document.getElementById('filteredUsageChart').getContext('2d');
+            new Chart(filteredUsageChartCtx, {
                 type: 'line',
                 data: {
-                    labels: filteredLabels,
+                    labels: labels,
                     datasets: [
                         {
                             label: 'Zużycie gazu (przefiltrowane)',
-                            data: filteredGasData,
-                            borderColor: 'blue',
-                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                            fill: true
+                            data: gasData,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: true,
                         },
                         {
                             label: 'Zużycie prądu (przefiltrowane)',
-                            data: filteredElectricityData,
-                            borderColor: 'yellow',
-                            backgroundColor: 'rgba(255, 255, 0, 0.1)',
-                            fill: true
+                            data: electricityData,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            const filteredDailyGasData = [];
-            const filteredDailyElectricityData = [];
-            const filteredDailyLabels = [];
-
-            filteredData.forEach((entry, index) => {
-                if (index > 0) {
-                    const prevEntry = filteredData[index - 1];
-                    filteredDailyLabels.push(entry.date);
-                    filteredDailyGasData.push(entry.gas - prevEntry.gas);
-                    filteredDailyElectricityData.push(entry.electricity - prevEntry.electricity);
-                }
-            });
-
-            new Chart(ctxFiltered2, {
+            const filteredDailyUsageChartCtx = document.getElementById('filteredDailyUsageChart').getContext('2d');
+            new Chart(filteredDailyUsageChartCtx, {
                 type: 'line',
                 data: {
-                    labels: filteredDailyLabels,
+                    labels: labels.slice(1),
                     datasets: [
                         {
                             label: 'Dzienne zużycie gazu (przefiltrowane)',
-                            data: filteredDailyGasData,
-                            borderColor: 'blue',
-                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                            fill: true
+                            data: dailyGasUsage,
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                            fill: true,
                         },
                         {
                             label: 'Dzienne zużycie prądu (przefiltrowane)',
-                            data: filteredDailyElectricityData,
-                            borderColor: 'yellow',
-                            backgroundColor: 'rgba(255, 255, 0, 0.1)',
-                            fill: true
+                            data: dailyElectricityUsage,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            renderTable('filteredDataTable', filteredData);
+            updateTable(filteredData, 'filteredDataTable');
         }
 
-        // Początkowe wywołanie, aby załadować dane przy pierwszym uruchomieniu
-        updateCharts();
+        function exportToPDF() {
+            const doc = new jsPDF();
+            doc.text("Tabela zużycia", 10, 10);
+
+            const table = document.querySelector('#dataTable table');
+            if (table) {
+                html2canvas(table).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    doc.addImage(imgData, 'PNG', 10, 20, 190, 0);
+                    doc.save('zuzycie.pdf');
+                });
+            } else {
+                doc.text("Brak danych do eksportu.", 10, 20);
+                doc.save('zuzycie.pdf');
+            }
+        }
+
+        window.onload = updateCharts;
     </script>
 </body>
 </html>
