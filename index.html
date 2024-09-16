@@ -445,42 +445,43 @@
 
         function exportToPDF() {
     const doc = new jsPDF();
-    let yOffset = 10;
+    
+    // Eksport tytułu
+    doc.text("Wykresy zużycia gazu i prądu", 10, 10);
 
-    // Dodaj tytuł do pliku PDF
-    doc.text("Przefiltrowane dane zużycia gazu i prądu", 10, yOffset);
-    yOffset += 10;
-
-    // Eksportuj wykresy do PDF
-    const charts = [
-        { id: 'filteredUsageChart', title: 'Wykres zużycia gazu i prądu (przefiltrowane)' },
-        { id: 'filteredDailyUsageChart', title: 'Wykres dziennego zużycia gazu i prądu (przefiltrowane)' }
-    ];
-
-    let promiseChain = Promise.resolve();
-
-    charts.forEach(chart => {
-        promiseChain = promiseChain.then(() => {
-            return new Promise((resolve) => {
-                const canvas = document.getElementById(chart.id);
-                if (canvas) {
-                    doc.text(chart.title, 10, yOffset);
-                    yOffset += 10;
-                    html2canvas(canvas).then(function (canvas) {
-                        const imgData = canvas.toDataURL('image/png');
-                        const imgWidth = 190;
-                        const imgHeight = canvas.height * imgWidth / canvas.width;
-                        doc.addImage(imgData, 'PNG', 10, yOffset, imgWidth, imgHeight);
-                        yOffset += imgHeight + 10;
-                        resolve();
-                    });
-                } else {
-                    resolve();
-                }
-            });
+    // Eksport wykresów
+    const usageChartCanvas = document.getElementById('usageChart');
+    const dailyUsageChartCanvas = document.getElementById('dailyUsageChart');
+    const filteredUsageChartCanvas = document.getElementById('filteredUsageChart');
+    const filteredDailyUsageChartCanvas = document.getElementById('filteredDailyUsageChart');
+    
+    // Przechwycenie i dodanie wykresów
+    html2canvas(usageChartCanvas).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        doc.addImage(imgData, 'PNG', 10, 20, 190, 100);
+        
+        // Przechwycenie drugiego wykresu
+        html2canvas(dailyUsageChartCanvas).then(canvas => {
+            const imgData2 = canvas.toDataURL('image/png');
+            doc.addPage();
+            doc.addImage(imgData2, 'PNG', 10, 10, 190, 100);
+            
+            // Eksport tabeli
+            const table = document.querySelector('#filteredDataTable table');
+            if (table) {
+                html2canvas(table).then(canvas => {
+                    const imgData3 = canvas.toDataURL('image/png');
+                    doc.addPage();
+                    doc.addImage(imgData3, 'PNG', 10, 10, 190, 100);
+                    doc.save('zuzycie.pdf');
+                });
+            } else {
+                doc.text("Brak danych do eksportu.", 10, 20);
+                doc.save('zuzycie.pdf');
+            }
         });
     });
-
+}
     // Eksportuj tabelę do PDF
     promiseChain = promiseChain.then(() => {
         doc.text("Tabela przefiltrowanych danych", 10, yOffset);
