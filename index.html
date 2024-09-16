@@ -33,12 +33,14 @@
             z-index: -1; /* Umieść za treścią */
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.8); /* Tło pod tekstem o 80% przejrzystości */
-            padding: 20px;
-        }
+       .container {
+    width: 80vw; /* Ustaw szerokość kontenera na 80% szerokości widoku */
+    max-width: 1920px; /* Maksymalna szerokość kontenera */
+    height: calc(80vw * 9 / 16); /* Ustaw wysokość kontenera proporcjonalnie do szerokości dla 16:9 */
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.8); /* Tło pod tekstem o 80% przejrzystości */
+    padding: 20px;
+    box-sizing: border-box; /* Uwzględnia padding w szerokości kontenera */
 
         .form-group {
             margin-bottom: 1em;
