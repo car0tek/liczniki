@@ -216,7 +216,7 @@
         });
 
         function updateCharts() {
-            const builtInData = [
+            const data = [
     { date: '2023-12-11', gas: 2850, electricity: 124 },
     { date: '2023-12-12', gas: 2863, electricity: 140 },
     { date: '2023-12-13', gas: 2873, electricity: 165 },
@@ -516,7 +516,7 @@ function filterAndUpdateCharts() {
     let data = JSON.parse(localStorage.getItem('usageData')) || [];
     
     // Dodanie danych wbudowanych
-    data = data.concat(builtInData);
+    data = data.concat(data);
 
     // Filtrowanie danych
     data = data.filter(entry => {
