@@ -137,7 +137,6 @@
             <input type="date" id="endDate">
         </div>
         <button onclick="filterAndUpdateCharts()">Filtruj dane</button>
-        <button onclick="exportToPDF()">Eksportuj do PDF</button>
 
         <!-- Wykresy -->
         <h2>Wykres zużycia gazu i prądu</h2>
@@ -474,37 +473,6 @@
 
             updateTable(filteredData, 'filteredDataTable');
         }
-
-       function exportToPDF() {
-    const doc = new jsPDF();
-    const source = document.createElement('div');
-    
-    // Skopiuj tabelę i wykresy do nowego elementu
-    const dataTable = document.getElementById('dataTable');
-    const usageChart = document.getElementById('usageChart');
-    const dailyUsageChart = document.getElementById('dailyUsageChart');
-    const filteredUsageChart = document.getElementById('filteredUsageChart');
-    const filteredDailyUsageChart = document.getElementById('filteredDailyUsageChart');
-
-    if (dataTable) source.appendChild(dataTable.cloneNode(true));
-    if (usageChart) source.appendChild(usageChart.cloneNode(true));
-    if (dailyUsageChart) source.appendChild(dailyUsageChart.cloneNode(true));
-    if (filteredUsageChart) source.appendChild(filteredUsageChart.cloneNode(true));
-    if (filteredDailyUsageChart) source.appendChild(filteredDailyUsageChart.cloneNode(true));
-
-    // Ustawienia dla eksportu
-    doc.fromHTML(
-        source,
-        15,
-        15,
-        {
-            'width': 180,
-            'elementHandlers': elementHandler
-        }
-    );
-    
-    doc.save('zuzycie.pdf');
-}
         window.onload = updateCharts;
     </script>
 </body>
