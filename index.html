@@ -255,32 +255,43 @@
                 dailyElectricityUsage.push(electricityData[i] - electricityData[i - 1]);
             }
 
-            const ctxUsage = document.getElementById('usageChart').getContext('2d');
-            new Chart(ctxUsage, {
+            const usageChartCtx = document.getElementById('usageChart').getContext('2d');
+            new Chart(usageChartCtx, {
                 type: 'line',
                 data: {
-                    labels,
+                    labels: labels,
                     datasets: [
                         {
                             label: 'Zużycie gazu',
                             data: gasData,
                             borderColor: 'rgba(255, 99, 132, 1)',
                             backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            fill: false
+                            fill: true,
                         },
                         {
                             label: 'Zużycie prądu',
                             data: electricityData,
                             borderColor: 'rgba(54, 162, 235, 1)',
                             backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            fill: false
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            const ctxDailyUsage = document.getElementById('dailyUsageChart').getContext('2d');
-            new Chart(ctxDailyUsage, {
+            const dailyUsageChartCtx = document.getElementById('dailyUsageChart').getContext('2d');
+            new Chart(dailyUsageChartCtx, {
                 type: 'line',
                 data: {
                     labels: labels.slice(1),
@@ -290,47 +301,56 @@
                             data: dailyGasUsage,
                             borderColor: 'rgba(255, 159, 64, 1)',
                             backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                            fill: false
+                            fill: true,
                         },
                         {
                             label: 'Dzienne zużycie prądu',
                             data: dailyElectricityUsage,
                             borderColor: 'rgba(75, 192, 192, 1)',
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            fill: false
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            updateTables(data, 'dataTable');
+            updateTable(data, 'dataTable');
         }
 
-        function updateTables(data, tableId) {
+        function updateTable(data, tableId) {
             const table = document.getElementById(tableId);
-            table.innerHTML = '<table><thead><tr><th>Data</th><th>Stan licznika gazu</th><th>Stan licznika prądu</th><th>Dzienne zużycie gazu</th><th>Dzienne zużycie prądu</th></tr></thead><tbody></tbody></table>';
+            table.innerHTML = '';
 
-            const tbody = table.querySelector('tbody');
+            if (data.length === 0) {
+                table.innerHTML = '<p>Brak danych do wyświetlenia.</p>';
+                return;
+            }
 
+            let tableHTML = '<table><thead><tr><th>Data</th><th>Zużycie gazu</th><th>Zużycie prądu</th><th>Dzienne zużycie gazu</th><th>Dzienne zużycie prądu</th></tr></thead><tbody>';
             let prevGas = 0;
             let prevElectricity = 0;
 
             data.forEach((entry, index) => {
-                const { date, gas, electricity } = entry;
-                const dailyGasUsage = index === 0 ? 0 : gas - prevGas;
-                const dailyElectricityUsage = index === 0 ? 0 : electricity - prevElectricity;
-
-                tbody.innerHTML += `<tr>
-                    <td>${date}</td>
-                    <td>${gas.toFixed(2)}</td>
-                    <td>${electricity.toFixed(2)}</td>
-                    <td>${dailyGasUsage.toFixed(2)}</td>
-                    <td>${dailyElectricityUsage.toFixed(2)}</td>
-                </tr>`;
-
-                prevGas = gas;
-                prevElectricity = electricity;
+                const dailyGas = index > 0 ? (entry.gas - data[index - 1].gas) : 0;
+                const dailyElectricity = index > 0 ? (entry.electricity - data[index - 1].electricity) : 0;
+                tableHTML += `<tr><td>${entry.date}</td><td>${entry.gas}</td><td>${entry.electricity}</td><td>${dailyGas}</td><td>${dailyElectricity}</td></tr>`;
+                prevGas = entry.gas;
+                prevElectricity = entry.electricity;
             });
+            tableHTML += '</tbody></table>';
+
+            table.innerHTML = tableHTML;
         }
 
         function filterAndUpdateCharts() {
@@ -338,7 +358,7 @@
             const endDate = document.getElementById('endDate').value;
 
             if (!startDate || !endDate) {
-                alert("Wprowadź zakres dat.");
+                alert("Wprowadź poprawny zakres dat.");
                 return;
             }
 
@@ -346,7 +366,7 @@
             const filteredData = data.filter(entry => entry.date >= startDate && entry.date <= endDate);
 
             if (filteredData.length === 0) {
-                alert("Brak danych w wybranym zakresie.");
+                alert("Brak danych w wybranym zakresie dat.");
                 return;
             }
 
@@ -356,7 +376,7 @@
             const gasData = [];
             const electricityData = [];
             const labels = [];
-            
+
             let prevGas = 0;
             let prevElectricity = 0;
 
@@ -382,32 +402,43 @@
                 dailyElectricityUsage.push(electricityData[i] - electricityData[i - 1]);
             }
 
-            const ctxFilteredUsage = document.getElementById('filteredUsageChart').getContext('2d');
-            new Chart(ctxFilteredUsage, {
+            const filteredUsageChartCtx = document.getElementById('filteredUsageChart').getContext('2d');
+            new Chart(filteredUsageChartCtx, {
                 type: 'line',
                 data: {
-                    labels,
+                    labels: labels,
                     datasets: [
                         {
                             label: 'Zużycie gazu (przefiltrowane)',
                             data: gasData,
                             borderColor: 'rgba(255, 99, 132, 1)',
                             backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            fill: false
+                            fill: true,
                         },
                         {
                             label: 'Zużycie prądu (przefiltrowane)',
                             data: electricityData,
                             borderColor: 'rgba(54, 162, 235, 1)',
                             backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            fill: false
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            const ctxFilteredDailyUsage = document.getElementById('filteredDailyUsageChart').getContext('2d');
-            new Chart(ctxFilteredDailyUsage, {
+            const filteredDailyUsageChartCtx = document.getElementById('filteredDailyUsageChart').getContext('2d');
+            new Chart(filteredDailyUsageChartCtx, {
                 type: 'line',
                 data: {
                     labels: labels.slice(1),
@@ -417,31 +448,48 @@
                             data: dailyGasUsage,
                             borderColor: 'rgba(255, 159, 64, 1)',
                             backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                            fill: false
+                            fill: true,
                         },
                         {
                             label: 'Dzienne zużycie prądu (przefiltrowane)',
                             data: dailyElectricityUsage,
                             borderColor: 'rgba(75, 192, 192, 1)',
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            fill: false
+                            fill: true,
                         }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            display: true
+                        }
+                    }
                 }
             });
 
-            updateTables(filteredData, 'filteredDataTable');
+            updateTable(filteredData, 'filteredDataTable');
         }
 
         function exportToPDF() {
             const doc = new jsPDF();
-            const table = document.getElementById('dataTable').querySelector('table');
+            doc.text("Tabela zużycia", 10, 10);
 
-            html2canvas(table).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                doc.addImage(imgData, 'PNG', 10, 10);
-                doc.save('data.pdf');
-            });
+            const table = document.querySelector('#dataTable table');
+            if (table) {
+                html2canvas(table).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    doc.addImage(imgData, 'PNG', 10, 20, 190, 0);
+                    doc.save('zuzycie.pdf');
+                });
+            } else {
+                doc.text("Brak danych do eksportu.", 10, 20);
+                doc.save('zuzycie.pdf');
+            }
         }
 
         window.onload = updateCharts;
