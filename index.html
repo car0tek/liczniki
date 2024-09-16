@@ -3,80 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Monitorowanie zużycia gazu i prądu </title>
+    <title>Monitorowanie zużycia gazu i prądu</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable"></script>
-     <style>
-    body {
-        font-family: Arial, sans-serif;
-        height: 100%;
+    <style>
+        /* Ustawienia dla całego tła */
+        body {
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
             color: black;
-            background-color: #8794a6;
-    }
-    .container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    .form-group {
-        margin-bottom: 1em;
-    }
-    label {
-        display: block;
-        margin-bottom: 0.5em;
-    }
-    input, button {
-        width: 100%;
-        padding: 0.5em;
-        margin-bottom: 1em;
-    }
-    button {
-        padding: 0.5em 1em;
-    }
-    .buttons {
-        display: flex;
-        justify-content: space-between;
-    }
-    canvas {
-        width: 100%;
-        max-width: 1000px;
-    }
-    .tables-container {
-        display: flex;
-        justify-content: space-between;
-    }
-    .table-wrapper {
-        width: 48%;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    table, th, td {
-        border: 1px solid #ddd;
-    }
-    th, td {
-        padding: 6px;
-        text-align: left;
-        font-size: 11px; /* Zmniejsza czcionkę w tabeli */
-        white-space: nowrap; /* Zapobiega zawijaniu tekstu */
-    }
-    th {
-        background-color: #f2f2f2;
-    }
-    </style>
+            background: url('images/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+        }
 
+        /* Dodaj ciemny overlay z 50% przezroczystością */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% przyciemnienie */
+            z-index: -1; /* Umieść za treścią */
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.8); /* Tło pod tekstem o 80% przejrzystości */
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 1em;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5em;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 0.5em;
+            margin-bottom: 1em;
+        }
+
+        button {
+            padding: 0.5em 1em;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .tables-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .table-wrapper {
+            width: 48%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 6px;
+            text-align: left;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Monitorowanie zużycia gazu i prądu</h1>
-        
-        <!-- Data input form -->
+
+        <!-- Formularz wprowadzania danych -->
         <div class="form-group">
             <label for="date">Data:</label>
             <input type="date" id="date">
@@ -95,11 +122,11 @@
             <button onclick="clearData()">Wyczyść dane</button>
         </div>
 
-        <!-- Excel file input -->
+        <!-- Import z Excela -->
         <h2>Importuj dane z Excela</h2>
         <input type="file" id="fileInput" accept=".xlsx" />
 
-        <!-- Date range input -->
+        <!-- Zakres dat -->
         <h2>Filtruj dane w zakresie dat</h2>
         <div class="form-group">
             <label for="startDate">Data początkowa:</label>
@@ -112,28 +139,27 @@
         <button onclick="filterAndUpdateCharts()">Filtruj dane</button>
         <button onclick="exportToPDF()">Eksportuj do PDF</button>
 
-        <!-- Charts -->
+        <!-- Wykresy -->
         <h2>Wykres zużycia gazu i prądu</h2>
         <canvas id="usageChart"></canvas>
 
         <h2>Wykres dziennego zużycia gazu i prądu</h2>
         <canvas id="dailyUsageChart"></canvas>
 
-        <!-- Additional charts for filtered data -->
+        <!-- Przefiltrowane wykresy -->
         <h2>Wykres zużycia gazu i prądu (przefiltrowane)</h2>
         <canvas id="filteredUsageChart"></canvas>
 
         <h2>Wykres dziennego zużycia gazu i prądu (przefiltrowane)</h2>
         <canvas id="filteredDailyUsageChart"></canvas>
 
-        <!-- Tables for exporting -->
+        <!-- Tabele -->
         <h2>Tabela zużycia</h2>
         <div class="tables-container">
             <div class="table-wrapper" id="dataTable"></div>
             <div class="table-wrapper" id="filteredDataTable"></div>
         </div>
     </div>
-
     <script>
         function excelDateToJSDate(excelDate) {
             const date = new Date((excelDate - 25569) * 86400 * 1000);
