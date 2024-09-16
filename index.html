@@ -473,7 +473,36 @@ th {
 
             updateTable(filteredData, 'filteredDataTable');
         }
-        window.onload = updateCharts;
+    function fetchExcelData() {
+    fetch('Y:/liczniki/liczniki.xlsx')
+        .then(response => response.arrayBuffer())
+        .then(data => {
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const sheetData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+            let usageData = JSON.parse(localStorage.getItem('usageData')) || [];
+
+            sheetData.slice(1).forEach(row => {
+                let [date, gas, electricity] = row;
+                if (typeof date === 'number') {
+                    date = excelDateToJSDate(date);
+                }
+                if (date && gas && electricity) {
+                    usageData.push({ date, gas: parseFloat(gas), electricity: parseFloat(electricity) });
+                }
+            });
+
+            localStorage.setItem('usageData', JSON.stringify(usageData));
+            updateCharts();
+        })
+        .catch(error => console.error('Błąd pobierania pliku:', error));
+}
+        
+window.onload = function() {
+    fetchExcelData();
+    updateCharts();
+};
     </script>
 </body>
 </html>
