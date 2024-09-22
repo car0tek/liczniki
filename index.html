@@ -361,34 +361,6 @@ th {
                 }
             });
 
-            updateTable(data, 'dataTable');
-        }
-
-        function updateTable(data, tableId) {
-            const table = document.getElementById(tableId);
-            table.innerHTML = '';
-
-            if (data.length === 0) {
-                table.innerHTML = '<p>Brak danych do wyświetlenia.</p>';
-                return;
-            }
-
-            let tableHTML = '<table><thead><tr><th>Data</th><th>Zużycie gazu</th><th>Zużycie prądu</th><th>Dzienne zużycie gazu</th><th>Dzienne zużycie prądu</th></tr></thead><tbody>';
-            let prevGas = 0;
-            let prevElectricity = 0;
-
-            data.forEach((entry, index) => {
-                const dailyGas = index > 0 ? (entry.gas - data[index - 1].gas) : 0;
-                const dailyElectricity = index > 0 ? (entry.electricity - data[index - 1].electricity) : 0;
-                tableHTML += `<tr><td>${entry.date}</td><td>${entry.gas}</td><td>${entry.electricity}</td><td>${dailyGas}</td><td>${dailyElectricity}</td></tr>`;
-                prevGas = entry.gas;
-                prevElectricity = entry.electricity;
-            });
-            tableHTML += '</tbody></table>';
-
-            table.innerHTML = tableHTML;
-        }
-
         function filterAndUpdateCharts() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
