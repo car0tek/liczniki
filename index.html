@@ -293,11 +293,11 @@
             updateTable(data, dailyGasUsage, dailyElectricityUsage, 'dataTable');
         }
 
-       function updateTable(data, tableId) {
+      function updateTable(data, tableId) {
     const tableWrapper = document.getElementById(tableId);
     tableWrapper.innerHTML = ''; // Wyczyszczenie poprzedniej tabeli
 
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
         tableWrapper.innerHTML = '<p>Brak danych do wyświetlenia.</p>';
         return;
     }
@@ -311,6 +311,7 @@
         dailyElectricityUsage.push(data[i].electricity - data[i - 1].electricity);
     }
 
+    // Tworzenie tabeli
     const tableBody = document.createElement('table');
     tableBody.innerHTML = `
         <thead>
@@ -326,8 +327,8 @@
             ${data.map((entry, index) => `
                 <tr>
                     <td>${entry.date}</td>
-                    <td>${entry.gas}</td>
-                    <td>${entry.electricity}</td>
+                    <td>${entry.gas !== undefined ? entry.gas : 'Brak danych'}</td>
+                    <td>${entry.electricity !== undefined ? entry.electricity : 'Brak danych'}</td>
                     <td>${index === 0 ? 0 : dailyGasUsage[index - 1]}</td>
                     <td>${index === 0 ? 0 : dailyElectricityUsage[index - 1]}</td>
                 </tr>
@@ -337,7 +338,6 @@
 
     tableWrapper.appendChild(tableBody);
 }
-
         function filterAndUpdateCharts() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
