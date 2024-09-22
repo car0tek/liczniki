@@ -293,9 +293,23 @@
             updateTable(data, dailyGasUsage, dailyElectricityUsage, 'dataTable');
         }
 
-        function updateTable(data, dailyGasUsage, dailyElectricityUsage, tableId) {
+       function updateTable(data, tableId) {
     const tableWrapper = document.getElementById(tableId);
     tableWrapper.innerHTML = ''; // Wyczyszczenie poprzedniej tabeli
+
+    if (data.length === 0) {
+        tableWrapper.innerHTML = '<p>Brak danych do wyświetlenia.</p>';
+        return;
+    }
+
+    // Oblicz dzienne zużycie
+    const dailyGasUsage = [];
+    const dailyElectricityUsage = [];
+
+    for (let i = 1; i < data.length; i++) {
+        dailyGasUsage.push(data[i].gas - data[i - 1].gas);
+        dailyElectricityUsage.push(data[i].electricity - data[i - 1].electricity);
+    }
 
     const tableBody = document.createElement('table');
     tableBody.innerHTML = `
