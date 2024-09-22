@@ -219,75 +219,112 @@ th {
         });
 
         function updateCharts() {
-            const data = JSON.parse(localStorage.getItem('usageData')) || [];
-            if (data.length === 0) return;
+    const data = JSON.parse(localStorage.getItem('usageData')) || [];
+    if (data.length === 0) return;
 
-            const allDates = Array.from(new Set(data.map(entry => entry.date))).sort();
-            const dataMap = new Map(data.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
+    const allDates = Array.from(new Set(data.map(entry => entry.date))).sort();
+    const dataMap = new Map(data.map(entry => [entry.date, { gas: entry.gas, electricity: entry.electricity }]));
 
-            const gasData = [];
-            const electricityData = [];
-            const labels = [];
-            
-            let prevGas = 0;
-            let prevElectricity = 0;
+    const gasData = [];
+    const electricityData = [];
+    const labels = [];
 
-            allDates.forEach(date => {
-                labels.push(date);
-                if (dataMap.has(date)) {
-                    const { gas, electricity } = dataMap.get(date);
-                    gasData.push(gas);
-                    electricityData.push(electricity);
-                    prevGas = gas;
-                    prevElectricity = electricity;
-                } else {
-                    gasData.push(prevGas);
-                    electricityData.push(prevElectricity);
-                }
-            });
+    let prevGas = 0;
+    let prevElectricity = 0;
 
-            const dailyGasUsage = [];
-            const dailyElectricityUsage = [];
+    allDates.forEach(date => {
+        labels.push(date);
+        if (dataMap.has(date)) {
+            const { gas, electricity } = dataMap.get(date);
+            gasData.push(gas);
+            electricityData.push(electricity);
+            prevGas = gas;
+            prevElectricity = electricity;
+        } else {
+            gasData.push(prevGas);
+            electricityData.push(prevElectricity);
+        }
+    });
 
-            for (let i = 1; i < gasData.length; i++) {
-                dailyGasUsage.push(gasData[i] - gasData[i - 1]);
-                dailyElectricityUsage.push(electricityData[i] - electricityData[i - 1]);
-            }
+    const dailyGasUsage = [];
+    const dailyElectricityUsage = [];
 
-            const usageChartCtx = document.getElementById('usageChart').getContext('2d');
-            new Chart(usageChartCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Zużycie gazu',
-                            data: gasData,
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            fill: true,
-                        },
-                        {
-                            label: 'Zużycie prądu',
-                            data: electricityData,
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                            fill: true,
-                        }
-                    ]
+    for (let i = 1; i < gasData.length; i++) {
+        dailyGasUsage.push(gasData[i] - gasData[i - 1]);
+        dailyElectricityUsage.push(electricityData[i] - electricityData[i - 1]);
+    }
+
+    const usageChartCtx = document.getElementById('usageChart').getContext('2d');
+    new Chart(usageChartCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Zużycie gazu',
+                    data: gasData,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: true,
                 },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        },
-                        x: {
-                            display: true
-                        }
-                    }
+                {
+                    label: 'Zużycie prądu',
+                    data: electricityData,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    fill: true,
                 }
-            });
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    display: true
+                }
+            }
+        }
+    });
+
+    const dailyUsageChartCtx = document.getElementById('dailyUsageChart').getContext('2d');
+    new Chart(dailyUsageChartCtx, {
+        type: 'line',
+        data: {
+            labels: labels.slice(1),
+            datasets: [
+                {
+                    label: 'Dzienne zużycie gazu',
+                    data: dailyGasUsage,
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    fill: true,
+                },
+                {
+                    label: 'Dzienne zużycie prądu',
+                    data: dailyElectricityUsage,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    display: true
+                }
+            }
+        }
+    });
+}
+
 
             const dailyUsageChartCtx = document.getElementById('dailyUsageChart').getContext('2d');
             new Chart(dailyUsageChartCtx, {
