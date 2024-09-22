@@ -295,7 +295,7 @@
 
       function updateTable(data, tableId) {
     const tableWrapper = document.getElementById(tableId);
-    tableWrapper.innerHTML = ''; // Wyczyszczenie poprzedniej tabeli
+    tableWrapper.innerHTML = ''; // Wyczyść poprzednią tabelę
 
     if (!data || data.length === 0) {
         tableWrapper.innerHTML = '<p>Brak danych do wyświetlenia.</p>';
@@ -312,8 +312,8 @@
     }
 
     // Tworzenie tabeli
-    const tableBody = document.createElement('table');
-    tableBody.innerHTML = `
+    const table = document.createElement('table');
+    table.innerHTML = `
         <thead>
             <tr>
                 <th>Data</th>
@@ -336,8 +336,9 @@
         </tbody>
     `;
 
-    tableWrapper.appendChild(tableBody);
+    tableWrapper.appendChild(table);
 }
+
         function filterAndUpdateCharts() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
