@@ -10,7 +10,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable"></script>
     <style>
-        /* Ustawienia dla całego tła */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -21,7 +20,6 @@
         .container {
             width: 80vw;
             max-width: 1920px;
-            height: calc(80vw * 9 / 16);
             margin: 0 auto;
             background-color: rgba(255, 255, 255, 0.8);
             padding: 20px;
@@ -292,10 +290,13 @@
                 }
             });
 
-            updateTable(data, 'dataTable');
+            updateTable(data, dailyGasUsage, dailyElectricityUsage, 'dataTable');
         }
 
-        function updateTable(data, tableId) {
+        function updateTable(data, dailyGasUsage, dailyElectricityUsage, tableId) {
+            const tableWrapper = document.getElementById(tableId);
+            tableWrapper.innerHTML = ''; // Wyczyszczenie poprzedniej tabeli
+
             const tableBody = document.createElement('table');
             tableBody.innerHTML = `
                 <thead>
@@ -303,21 +304,24 @@
                         <th>Data</th>
                         <th>Stan licznika gazu</th>
                         <th>Stan licznika prądu</th>
+                        <th>Dzienne zużycie gazu</th>
+                        <th>Dzienne zużycie prądu</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.map(entry => `
+                    ${data.slice(1).map((entry, index) => `
                         <tr>
                             <td>${entry.date}</td>
                             <td>${entry.gas}</td>
                             <td>${entry.electricity}</td>
+                            <td>${dailyGasUsage[index]}</td>
+                            <td>${dailyElectricityUsage[index]}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             `;
 
-            document.getElementById(tableId).innerHTML = '';
-            document.getElementById(tableId).appendChild(tableBody);
+            tableWrapper.appendChild(tableBody);
         }
 
         function filterAndUpdateCharts() {
@@ -407,7 +411,7 @@
                 }
             });
 
-            updateTable(filteredData, 'filteredDataTable');
+            updateTable(filteredData, dailyGasUsage, dailyElectricityUsage, 'filteredDataTable');
         }
     </script>
 </body>
