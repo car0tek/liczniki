@@ -294,35 +294,35 @@
         }
 
         function updateTable(data, dailyGasUsage, dailyElectricityUsage, tableId) {
-            const tableWrapper = document.getElementById(tableId);
-            tableWrapper.innerHTML = ''; // Wyczyszczenie poprzedniej tabeli
+    const tableWrapper = document.getElementById(tableId);
+    tableWrapper.innerHTML = ''; // Wyczyszczenie poprzedniej tabeli
 
-            const tableBody = document.createElement('table');
-            tableBody.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Stan licznika gazu</th>
-                        <th>Stan licznika prądu</th>
-                        <th>Dzienne zużycie gazu</th>
-                        <th>Dzienne zużycie prądu</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.slice(1).map((entry, index) => `
-                        <tr>
-                            <td>${entry.date}</td>
-                            <td>${entry.gas}</td>
-                            <td>${entry.electricity}</td>
-                            <td>${dailyGasUsage[index]}</td>
-                            <td>${dailyElectricityUsage[index]}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            `;
+    const tableBody = document.createElement('table');
+    tableBody.innerHTML = `
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Stan licznika gazu</th>
+                <th>Stan licznika prądu</th>
+                <th>Dzienne zużycie gazu</th>
+                <th>Dzienne zużycie prądu</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${data.map((entry, index) => `
+                <tr>
+                    <td>${entry.date}</td>
+                    <td>${entry.gas}</td>
+                    <td>${entry.electricity}</td>
+                    <td>${index === 0 ? 0 : dailyGasUsage[index - 1]}</td>
+                    <td>${index === 0 ? 0 : dailyElectricityUsage[index - 1]}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    `;
 
-            tableWrapper.appendChild(tableBody);
-        }
+    tableWrapper.appendChild(tableBody);
+}
 
         function filterAndUpdateCharts() {
             const startDate = document.getElementById('startDate').value;
